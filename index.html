@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Dashboard - Advanced System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A0E27;
+            --accent: #00D9FF;
+            --accent-dark: #0099CC;
+            --success: #00FF88;
+            --warning: #FFB800;
+            --danger: #FF3366;
+            --bg-dark: #0F1419;
+            --card-bg: #1A1F2E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A8B8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.08) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, -30px) rotate(5deg); }
+        }
+
+        /* ==================== LOGIN SCREEN ==================== */
+        #loginScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2);
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-box h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .login-box p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border: none;
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* ==================== DASHBOARD ==================== */
+        #dashboard {
+            display: none;
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dashboard-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .last-update {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #00CC66);
+            color: var(--primary);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-logout:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent), transparent);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-card .change {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+        }
+
+        .change.positive {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+        }
+
+        .change.negative {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--danger);
+        }
+
+        /* Filters */
+        .filters-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filters-header h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: border 0.3s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-card h3 {
+            font-family: 'Syne', sans-serif;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-icon:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        thead {
+            background: var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            color: var(--accent);
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            color: var(--accent);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            transition: all 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(255, 184, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--danger);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            z-index: 3000;
+            animation: slideInRight 0.3s;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #dashboard {
+                padding: 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body::before,
+            .header-actions,
+            .filters-section,
+            .charts-section {
+                display: none !important;
+            }
+
+            .table-section {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>🎓 Attendance Portal</h1>
+            <p>Enter your credentials to access the dashboard</p>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+            </div>
+            <button class="btn-login" onclick="login()">Login</button>
+            <div class="error-message" id="errorMessage">Invalid credentials. Please try again.</div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1>📊 Attendance Dashboard</h1>
+                <div class="header-info">
+                    <div class="last-update">
+                        <span>🕐 Last updated: <span id="lastUpdate">--</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="refreshData()">
+                    🔄 Refresh
+                </button>
+                <button class="btn btn-primary" onclick="openEmailModal()">
+                    📧 Email Low Attendance
+                </button>
+                <button class="btn btn-primary" onclick="exportToExcel()">
+                    📥 Export Excel
+                </button>
+                <button class="btn btn-logout" onclick="logout()">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>📚 Total Students</h3>
+                <div class="stat-value">
+                    <div class="value" id="totalStudents">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>✅ Present Today</h3>
+                <div class="stat-value">
+                    <div class="value" id="presentToday">0</div>
+                    <span class="change positive" id="todayChange" style="display: none;">+0%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>📈 Average Attendance</h3>
+                <div class="stat-value">
+                    <div class="value" id="avgAttendance">0%</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>⚠️ Below 75%</h3>
+                <div class="stat-value">
+                    <div class="value" id="lowAttendance">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <h3>🔍 Filters</h3>
+                <button class="btn btn-icon" onclick="clearFilters()" title="Clear all filters">
+                    ✖️ Clear
+                </button>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Search Student</label>
+                    <input type="text" id="searchStudent" placeholder="Type student name..." oninput="filterTable()">
+                </div>
+                <div class="filter-group">
+                    <label>Date From</label>
+                    <input type="date" id="dateFrom" onchange="filterTable()">
+                </div>
+                <div class="filter-group">
+                    <label>Date To</label>
+                    <input type="date" id="dateTo" onchange="filterTable()">
+                </div>
+                <div class="filter-group">
+                    <label>Subject</label>
+                    <select id="subjectFilter" onchange="filterTable()">
+                        <option value="">All Subjects</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Class</label>
+                    <select id="classFilter" onchange="filterTable()">
+                        <option value="">All Classes</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Attendance Status</label>
+                    <select id="statusFilter" onchange="filterTable()">
+                        <option value="">All Status</option>
+                        <option value="excellent">Excellent (≥85%)</option>
+                        <option value="good">Good (75-84%)</option>
+                        <option value="low">Low (<75%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3>📈 Daily Attendance Trend</h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>🎯 Attendance Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>📚 Subject-wise Attendance</h3>
+                <div class="chart-container">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>📋 Attendance Records</h2>
+                <div class="table-actions">
+                    <button class="btn-icon" onclick="printTable()" title="Print table">
+                        🖨️
+                    </button>
+                    <button class="btn-icon" onclick="exportToCSV()" title="Export to CSV">
+                        📄
+                    </button>
+                </div>
+            </div>
+            <div id="tableLoading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading attendance data from Google Sheets...</p>
+            </div>
+            <div id="tableContainer" style="display: none;">
+                <table id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Student Name</th>
+                            <th onclick="sortTable(1)">Roll Number</th>
+                            <th onclick="sortTable(2)">Class</th>
+                            <th onclick="sortTable(3)">Subject</th>
+                            <th onclick="sortTable(4)">Date</th>
+                            <th onclick="sortTable(5)">Time</th>
+                            <th onclick="sortTable(6)">Attendance %</th>
+                            <th onclick="sortTable(7)">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Modal -->
+    <div class="modal" id="emailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📧 Send Low Attendance Emails</h3>
+                <button class="modal-close" onclick="closeEmailModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p>This will send email alerts to <strong id="emailCount">0</strong> students with attendance below 75%.</p>
+                <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    Note: Emails are sent via Google Apps Script. Make sure the script is configured correctly.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-logout" onclick="closeEmailModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmSendEmails()">Send Emails</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        // 🔧 IMPORTANT: Replace these with your actual values!
+        
+        const SHEET_ID = 'AKfycbykNZ0ePyEdfhVRG91IsVpQDsvAGuLXZaav33N1D9v8MDfM4WXwGbzuLJaDcvkei60W';  // From Google Sheets URL
+        const API_KEY = 'AIzaSyA0-lfPPYyoWRL9E5Ztyp6shDFqDGgefOw';     // From Google Cloud Console
+        const SHEET_NAME = 'Student Attendance';         // Name of your sheet tab
+
+        // Login credentials - CHANGE THESE!
+        const VALID_USERS = {
+            'admin': 'admin123',
+            'teacher': 'teacher123'
+        };
+
+        // Settings
+        const LOW_ATTENDANCE_THRESHOLD = 75;
+        const RECORDS_PER_PAGE = 50;
+        const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+
+        // ==================== GLOBAL VARIABLES ====================
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        let sortColumn = -1;
+        let sortAscending = true;
+        let trendChart, distributionChart, subjectChart;
+        let autoRefreshTimer;
+
+        // ==================== LOGIN ====================
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMessage');
+
+            if (VALID_USERS[username] && VALID_USERS[username] === password) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadDashboard();
+                showNotification('Welcome back, ' + username + '!', 'success');
+            } else {
+                errorMsg.style.display = 'block';
+                setTimeout(() => errorMsg.style.display = 'none', 3000);
+            }
+        }
+
+        function logout() {
+            clearInterval(autoRefreshTimer);
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            showNotification('Logged out successfully', 'success');
+        }
+
+        // Allow Enter key to login
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') login();
+                });
+            }
+        });
+
+        // ==================== DASHBOARD LOADING ====================
+        async function loadDashboard() {
+            try {
+                showNotification('Loading attendance data...', 'success');
+                
+                // Fetch data from Google Sheets
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data. Check your Sheet ID and API Key.');
+                }
+                
+                const data = await response.json();
+
+                if (!data.values || data.values.length < 2) {
+                    throw new Error('No data found in the sheet.');
+                }
+
+                // Process data
+                processData(data.values);
+                
+                // Update UI
+                updateStats();
+                updateCharts();
+                updateTable();
+                populateFilters();
+                updateLastUpdate();
+
+                document.getElementById('tableLoading').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+
+                showNotification('Data loaded successfully!', 'success');
+
+                // Set up auto-refresh
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = setInterval(refreshData, AUTO_REFRESH_INTERVAL);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('tableLoading').innerHTML = 
+                    `<p style="color: var(--danger)">❌ Error: ${error.message}</p>
+                     <p style="color: var(--text-secondary); margin-top: 1rem;">
+                     Please check:<br>
+                     • Sheet ID is correct<br>
+                     • API Key is valid<br>
+                     • Sheet is publicly accessible<br>
+                     • Sheet name is "Student Attendance"
+                     </p>`;
+                showNotification('Failed to load data', 'error');
+            }
+        }
+
+        async function refreshData() {
+            await loadDashboard();
+        }
+
+        function processData(rows) {
+            // Skip header row
+            const dataRows = rows.slice(1);
+            
+            allData = dataRows.map(row => ({
+                timestamp: row[0] || '',
+                cardUID: row[1] || '',
+                studentName: row[2] || '',
+                date: row[3] || '',
+                time: row[4] || '',
+                rollNumber: row[5] || '',
+                class: row[6] || '',
+                subject: row[7] || '',
+                email: row[8] || ''
+            }));
+
+            filteredData = [...allData];
+            calculateAttendance();
+        }
+
+        function calculateAttendance() {
+            const studentAttendance = {};
+            const totalDays = 30; // Adjust based on your needs
+
+            allData.forEach(record => {
+                const key = record.studentName + record.class;
+                if (!studentAttendance[key]) {
+                    studentAttendance[key] = {
+                        total: 0,
+                        rollNumber: record.rollNumber,
+                        class: record.class,
+                        email: record.email
+                    };
+                }
+                studentAttendance[key].total++;
+            });
+
+            // Add attendance percentage to each record
+            allData.forEach(record => {
+                const key = record.studentName + record.class;
+                const attendance = studentAttendance[key];
+                const percentage = ((attendance.total / totalDays) * 100).toFixed(1);
+                record.attendancePercentage = Math.min(parseFloat(percentage), 100);
+            });
+        }
+
+        function updateStats() {
+            const uniqueStudents = new Set(allData.map(r => r.studentName + r.class)).size;
+            
+            const today = new Date();
+            const todayStr = today.toLocaleDateString('en-GB').split('/').reverse().join('-');
+            const presentToday = allData.filter(r => {
+                const recordDate = r.date.split('-').reverse().join('-');
+                return recordDate === todayStr;
+            }).length;
+            
+            const avgAttendance = allData.length > 0 
+                ? (allData.reduce((sum, r) => sum + parseFloat(r.attendancePercentage || 0), 0) / allData.length).toFixed(1)
+                : 0;
+            
+            const lowAttendance = new Set(
+                allData.filter(r => parseFloat(r.attendancePercentage) < LOW_ATTENDANCE_THRESHOLD)
+                    .map(r => r.studentName + r.class)
+            ).size;
+
+            document.getElementById('totalStudents').textContent = uniqueStudents;
+            document.getElementById('presentToday').textContent = presentToday;
+            document.getElementById('avgAttendance').textContent = avgAttendance + '%';
+            document.getElementById('lowAttendance').textContent = lowAttendance;
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            // Pagination
+            const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+            const endIndex = startIndex + RECORDS_PER_PAGE;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            pageData.forEach(record => {
+                const row = tbody.insertRow();
+                const percentage = parseFloat(record.attendancePercentage);
+                
+                let statusBadge = '';
+                if (percentage >= 85) {
+                    statusBadge = '<span class="badge badge-success">Excellent</span>';
+                } else if (percentage >= 75) {
+                    statusBadge = '<span class="badge badge-warning">Good</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-danger">Low</span>';
+                }
+
+                row.innerHTML = `
+                    <td>${record.studentName}</td>
+                    <td>${record.rollNumber}</td>
+                    <td>${record.class}</td>
+                    <td>${record.subject}</td>
+                    <td>${record.date}</td>
+                    <td>${record.time}</td>
+                    <td><strong>${percentage}%</strong></td>
+                    <td>${statusBadge}</td>
+                `;
+            });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / RECORDS_PER_PAGE);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '« Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                currentPage--;
+                updateTable();
+            };
+            pagination.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = i === currentPage ? 'active' : '';
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    updateTable();
+                };
+                pagination.appendChild(pageBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next »';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                currentPage++;
+                updateTable();
+            };
+            pagination.appendChild(nextBtn);
+        }
+
+        function populateFilters() {
+            const subjects = new Set(allData.map(r => r.subject).filter(Boolean));
+            const classes = new Set(allData.map(r => r.class).filter(Boolean));
+
+            const subjectSelect = document.getElementById('subjectFilter');
+            const classSelect = document.getElementById('classFilter');
+
+            // Clear existing options (except first)
+            subjectSelect.innerHTML = '<option value="">All Subjects</option>';
+            classSelect.innerHTML = '<option value="">All Classes</option>';
+
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                subjectSelect.appendChild(option);
+            });
+
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls;
+                option.textContent = cls;
+                classSelect.appendChild(option);
+            });
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchStudent').value.toLowerCase();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const subject = document.getElementById('subjectFilter').value;
+            const classFilter = document.getElementById('classFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredData = allData.filter(record => {
+                const matchSearch = record.studentName.toLowerCase().includes(searchTerm);
+                const matchSubject = !subject || record.subject === subject;
+                const matchClass = !classFilter || record.class === classFilter;
+                
+                let matchDate = true;
+                if (dateFrom || dateTo) {
+                    const recordDate = new Date(record.date.split('-').reverse().join('-'));
+                    if (dateFrom) matchDate = matchDate && recordDate >= new Date(dateFrom);
+                    if (dateTo) matchDate = matchDate && recordDate <= new Date(dateTo);
+                }
+
+                let matchStatus = true;
+                if (statusFilter) {
+                    const percentage = parseFloat(record.attendancePercentage);
+                    if (statusFilter === 'excellent') matchStatus = percentage >= 85;
+                    else if (statusFilter === 'good') matchStatus = percentage >= 75 && percentage < 85;
+                    else if (statusFilter === 'low') matchStatus = percentage < 75;
+                }
+
+                return matchSearch && matchSubject && matchClass && matchDate && matchStatus;
+            });
+
+            currentPage = 1;
+            updateTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchStudent').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('subjectFilter').value = '';
+            document.getElementById('classFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            filterTable();
+            showNotification('Filters cleared', 'success');
+        }
+
+        // ==================== SORTING ====================
+        function sortTable(column) {
+            const table = document.getElementById('attendanceTable');
+            const headers = table.getElementsByTagName('th');
+
+            // Remove previous sorting indicators
+            for (let i = 0; i < headers.length; i++) {
+                headers[i].classList.remove('sorted-asc', 'sorted-desc');
+            }
+
+            // Toggle sort direction if same column
+            if (sortColumn === column) {
+                sortAscending = !sortAscending;
+            } else {
+                sortAscending = true;
+                sortColumn = column;
+            }
+
+            // Add sorting indicator
+            headers[column].classList.add(sortAscending ? 'sorted-asc' : 'sorted-desc');
+
+            // Sort data
+            const keys = ['studentName', 'rollNumber', 'class', 'subject', 'date', 'time', 'attendancePercentage', 'attendancePercentage'];
+            
+            filteredData.sort((a, b) => {
+                let aVal = a[keys[column]];
+                let bVal = b[keys[column]];
+
+                // Handle numeric values
+                if (column === 6 || column === 7) {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                }
+
+                if (aVal < bVal) return sortAscending ? -1 : 1;
+                if (aVal > bVal) return sortAscending ? 1 : -1;
+                return 0;
+            });
+
+            updateTable();
+        }
+
+        // ==================== CHARTS ====================
+        function updateCharts() {
+            updateTrendChart();
+            updateDistributionChart();
+            updateSubjectChart();
+        }
+
+        function updateTrendChart() {
+            const dailyData = {};
+            allData.forEach(record => {
+                const date = record.date;
+                dailyData[date] = (dailyData[date] || 0) + 1;
+            });
+
+            const dates = Object.keys(dailyData).sort().slice(-7);
+            const counts = dates.map(date => dailyData[date]);
+
+            if (trendChart) trendChart.destroy();
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Daily Attendance',
+                        data: counts,
+                        borderColor: '#00D9FF',
+                        backgroundColor: 'rgba(0, 217, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#A0A8B8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#A0A8B8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDistributionChart() {
+            const distribution = { excellent: 0, good: 0, low: 0 };
+            const uniqueStudents = new Map();
+            
+            allData.forEach(record => {
+                const key = record.studentName + record.class;
+                if (!uniqueStudents.has(key)) {
+                    uniqueStudents.set(key, record);
+                    const percentage = parseFloat(record.attendancePercentage);
+                    if (percentage >= 85) distribution.excellent++;
+                    else if (percentage >= 75) distribution.good++;
+                    else distribution.low++;
+                }
+            });
+
+            if (distributionChart) distributionChart.destroy();
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            distributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Excellent (≥85%)', 'Good (75-84%)', 'Low (<75%)'],
+                    datasets: [{
+                        data: [distribution.excellent, distribution.good, distribution.low],
+                        backgroundColor: ['#00FF88', '#FFB800', '#FF3366'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#A0A8B8', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSubjectChart() {
+            const subjectData = {};
+            allData.forEach(record => {
+                if (record.subject) {
+                    subjectData[record.subject] = (subjectData[record.subject] || 0) + 1;
+                }
+            });
+
+            const subjects = Object.keys(subjectData);
+            const counts = Object.values(subjectData);
+
+            if (subjectChart) subjectChart.destroy();
+            const ctx = document.getElementById('subjectChart').getContext('2d');
+            subjectChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [{
+                        label: 'Attendance Count',
+                        data: counts,
+                        backgroundColor: '#00D9FF',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#A0A8B8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#A0A8B8' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== EMAIL FUNCTIONALITY ====================
+        function openEmailModal() {
+            const lowAttendanceStudents = new Map();
+            
+            allData.forEach(record => {
+                const key = record.studentName + record.class;
+                const percentage = parseFloat(record.attendancePercentage);
+                if (percentage < LOW_ATTENDANCE_THRESHOLD && record.email) {
+                    lowAttendanceStudents.set(key, record);
+                }
+            });
+
+            document.getElementById('emailCount').textContent = lowAttendanceStudents.size;
+            document.getElementById('emailModal').style.display = 'flex';
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').style.display = 'none';
+        }
+
+        function confirmSendEmails() {
+            closeEmailModal();
+            showNotification('Email functionality requires Google Apps Script integration. Check the guide for setup.', 'warning');
+            // Implement actual email sending logic here with your email service
+        }
+
+        // ==================== EXPORT FUNCTIONS ====================
+        function exportToExcel() {
+            // Convert to CSV and download
+            let csv = 'Student Name,Roll Number,Class,Subject,Date,Time,Attendance %,Status\n';
+            
+            filteredData.forEach(record => {
+                const percentage = parseFloat(record.attendancePercentage);
+                let status = 'Excellent';
+                if (percentage < 85) status = 'Good';
+                if (percentage < 75) status = 'Low';
+                
+                csv += `"${record.studentName}","${record.rollNumber}","${record.class}","${record.subject}","${record.date}","${record.time}","${percentage}%","${status}"\n`;
+            });
+
+            downloadFile(csv, 'attendance-report.csv', 'text/csv');
+            showNotification('Exported to Excel successfully!', 'success');
+        }
+
+        function exportToCSV() {
+            exportToExcel(); // Same implementation
+        }
+
+        function downloadFile(content, fileName, contentType) {
+            const a = document.createElement('a');
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+        }
+
+        function printTable() {
+            window.print();
+        }
+
+        // ==================== UTILITIES ====================
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('lastUpdate').textContent = timeString;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notification.className = `notification ${type}`;
+            notificationText.textContent = message;
+            notification.style.display = 'flex';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // ==================== INITIALIZATION ====================
+        // Check if configuration is set
+        window.addEventListener('load', () => {
+            if (SHEET_ID === 'YOUR_GOOGLE_SHEET_ID_HERE' || API_KEY === 'YOUR_GOOGLE_API_KEY_HERE') {
+                console.warn('⚠️ Configuration needed! Please update SHEET_ID and API_KEY in the code.');
+            }
+        });
+    </script>
+</body>
+</html>
