@@ -971,7 +971,21 @@
         let autoRefreshTimer;
 
         // ==================== LOGIN ====================
-        function login() {
+
+        const ADMIN_PASSWORD = "1234";
+
+function login() {
+    const password = document.getElementById("passwordInput").value;
+
+    if (password === ADMIN_PASSWORD) {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("dashboardPage").style.display = "block";
+    } else {
+        alert("Incorrect password!");
+    }
+}
+
+      /*  function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMessage');
@@ -985,7 +999,7 @@
                 errorMsg.style.display = 'block';
                 setTimeout(() => errorMsg.style.display = 'none', 3000);
             }
-        }
+        }*/
 
         function logout() {
             clearInterval(autoRefreshTimer);
@@ -1548,6 +1562,7 @@ const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${
 </body>
 
 </html>
+
 
 
 
