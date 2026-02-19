@@ -1007,61 +1007,48 @@
         });
 
         // ==================== DASHBOARD LOADING ====================
-        async function loadDashboard() {
-            try {
-                showNotification('Loading attendance data...', 'success');
-                
-                // Fetch data from Google Sheets
-                //const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
-               // const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:I1000?key=${API_KEY}`;
-                
-              https://sheets.googleapis.com/v4/spreadsheets/154bJfsfL6FdQTF-zhwDkQH2FhlnuxZDfwe5IzsJNr5A/values/Sheet1!A1:I1000?key=AIzaSyBpCp1uMbVXrBlkMRV7bN1swywbPLzbEyc
-  
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch data. Check your Sheet ID and API Key.');
-                }
-                
-                const data = await response.json();
+     async function loadDashboard() {
+    try {
+        showNotification('Loading attendance data...', 'success');
 
-                if (!data.values || data.values.length < 2) {
-                    throw new Error('No data found in the sheet.');
-                }
+        // ✅ Correct Google Sheets API URL
+      //  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:I1000?key=${API_KEY}`;
+const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:I1000?key=${API_KEY}`;
 
-                // Process data
-                processData(data.values);
-                
-                // Update UI
-                updateStats();
-                updateCharts();
-                updateTable();
-                populateFilters();
-                updateLastUpdate();
+        const response = await fetch(url);
 
-                document.getElementById('tableLoading').style.display = 'none';
-                document.getElementById('tableContainer').style.display = 'block';
-
-                showNotification('Data loaded successfully!', 'success');
-
-                // Set up auto-refresh
-                clearInterval(autoRefreshTimer);
-                autoRefreshTimer = setInterval(refreshData, AUTO_REFRESH_INTERVAL);
-
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.getElementById('tableLoading').innerHTML = 
-                    `<p style="color: var(--danger)">❌ Error: ${error.message}</p>
-                     <p style="color: var(--text-secondary); margin-top: 1rem;">
-                     Please check:<br>
-                     • Sheet ID is correct<br>
-                     • API Key is valid<br>
-                     • Sheet is publicly accessible<br>
-                     • Sheet name is "Student Attendance"
-                     </p>`;
-                showNotification('Failed to load data', 'error');
-            }
+        if (!response.ok) {
+            throw new Error('Failed to fetch data. Check your Sheet ID and API Key.');
         }
+
+        const data = await response.json();
+
+        if (!data.values || data.values.length < 2) {
+            throw new Error('No data found in the sheet.');
+        }
+
+        processData(data.values);
+
+        updateStats();
+        updateCharts();
+        updateTable();
+        populateFilters();
+        updateLastUpdate();
+
+        document.getElementById('tableLoading').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+
+        showNotification('Data loaded successfully!', 'success');
+
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(refreshData, AUTO_REFRESH_INTERVAL);
+
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showNotification('Failed to load data', 'error');
+    }
+}
+
 
         async function refreshData() {
             await loadDashboard();
@@ -1561,6 +1548,7 @@
 </body>
 
 </html>
+
 
 
 
