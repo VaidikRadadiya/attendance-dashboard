@@ -1012,7 +1012,9 @@
                 showNotification('Loading attendance data...', 'success');
                 
                 // Fetch data from Google Sheets
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+                //const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A1:Z1000?key=${API_KEY}`;
+
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -1557,5 +1559,6 @@
 </body>
 
 </html>
+
 
 
