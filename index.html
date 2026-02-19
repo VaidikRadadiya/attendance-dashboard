@@ -971,24 +971,31 @@
         let autoRefreshTimer;
 
         // ==================== LOGIN ====================
+// ==================== LOGIN ====================
 
 const ADMIN_PASSWORD = "1234";
 
 function login() {
-    const input = document.getElementById("passwordInput");
+    const passwordInput = document.getElementById("password");
+    const errorMsg = document.getElementById("errorMessage");
 
-    if (!input) {
+    if (!passwordInput) {
         console.error("Password input not found");
         return;
     }
 
-    const password = input.value.trim();
+    const password = passwordInput.value.trim();
 
     if (password === ADMIN_PASSWORD) {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("dashboardPage").style.display = "block";
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        loadDashboard();
+        showNotification("Login successful!", "success");
     } else {
-        alert("Incorrect password!");
+        errorMsg.style.display = "block";
+        setTimeout(() => {
+            errorMsg.style.display = "none";
+        }, 3000);
     }
 }
 
@@ -1570,6 +1577,7 @@ const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${
 </body>
 
 </html>
+
 
 
 
