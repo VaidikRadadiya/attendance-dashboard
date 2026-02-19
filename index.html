@@ -951,10 +951,10 @@
         const SHEET_NAME = "Sheet1";         // Name of your sheet tab
 
         // Login credentials - CHANGE THESE!
-        const VALID_USERS = {
+        /*const VALID_USERS = {
             'admin': 'admin123',
             'vaidik': 'vaidik123'
-        };
+        };*/
 
         // Settings
         const LOW_ATTENDANCE_THRESHOLD = 75;
@@ -972,10 +972,17 @@
 
         // ==================== LOGIN ====================
 
-        const ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD = "1234";
 
 function login() {
-    const password = document.getElementById("passwordInput").value;
+    const input = document.getElementById("passwordInput");
+
+    if (!input) {
+        console.error("Password input not found");
+        return;
+    }
+
+    const password = input.value.trim();
 
     if (password === ADMIN_PASSWORD) {
         document.getElementById("loginPage").style.display = "none";
@@ -984,6 +991,7 @@ function login() {
         alert("Incorrect password!");
     }
 }
+
 
       /*  function login() {
             const username = document.getElementById('username').value.trim();
@@ -1562,6 +1570,7 @@ const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${
 </body>
 
 </html>
+
 
 
 
